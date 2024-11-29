@@ -145,3 +145,38 @@ app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
 
+
+// Rota para salvar pontuação após o quiz
+app.post('/api/saveScore', authenticateToken, (req, res) => {
+  const { pontos } = req.body;
+  const user_id = req.user.id;
+
+  const query = 'INSERT INTO scores (user_id, pontos) VALUES (?, ?)';
+  db.query(query, [user_id, pontos], (err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao salvar pontuação.' });
+    }
+    res.status(201).json({ message: 'Pontuação salva com sucesso!' });
+  });
+});
+
+// Rota para exibir o ranking de pontuação
+app.get('/api/ranking', (req, res) => {
+  const query = `
+    SELECT users.nome, scores.pontos 
+    FROM scores 
+    JOIN users ON scores.user_id = users.id
+    ORDER BY scores.pontos DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao carregar o ranking.' });
+    }
+    res.json(results);
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
